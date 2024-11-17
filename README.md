@@ -1,2 +1,2 @@
 # SimpleSQLiteReader
-Simple SQLite reader. Made with PyQt6
+Простой и удобный редактор SQL таблиц
