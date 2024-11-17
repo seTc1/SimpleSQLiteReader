@@ -1,5 +1,7 @@
 from PyQt6.QtSql import QSqlDatabase, QSqlTableModel
 import sqlite3
+import os
+import shutil
 from MainWindowUI import Ui_MainWindow
 from PyQt6.QtWidgets import QMainWindow, QTableWidgetItem
 from ExecuteSQLWindow import ExecuteSQLWindow
@@ -13,16 +15,46 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.buttons_connection()
         self.executeSQlWindow = ExecuteSQLWindow()
         self.database_connection = None
-        self.model = None
+        self.journaldb_name = None
+        self.tableupdate_count = 1
+        self.database_name = None
 
     def buttons_connection(self):
         self.btn_open_database.clicked.connect(self.open_database)
         self.combobox_chose_window.currentIndexChanged.connect(self.load_table)
+        self.btn_update_table.clicked.connect(self.load_table)
+        self.btn_create_database.clicked.connect(self.create_database)
+        self.btn_save_bd.clicked.connect(self.save_database)
 
     def open_sqlexecute_window(self):
         self.executeSQlWindow.show()
 
     def open_database(self):
+        self.database_name = self.lineEdit_database_name.text()
+        if not self.database_name:
+            self.statusBar().showMessage("Ошибка, не указано название файла!")
+            return
+        elif not self.database_name.endswith((".db", ".sqlite3", ".sqlite", ".db3")):
+            self.statusBar().showMessage("Ошибка, неверное расширение файла!")
+            return
+
+        if self.database_connection:
+            self.database_connection.close()
+
+        if not os.path.exists(self.database_name):
+            self.statusBar().showMessage("Ошибка, файл базы данных не существует!")
+            return
+
+        self.journaldb_name = f"JOURNAL_{self.database_name}"
+        shutil.copy(self.database_name, self.journaldb_name)
+        self.database_connection = sqlite3.connect(self.journaldb_name)
+
+        self.load_table_names()
+        self.load_table()
+        self.statusBar().showMessage(f"База данных {self.database_name} успешно открыта!")
+        self.tableupdate_count = 1
+
+    def create_database(self):
         database_name = self.lineEdit_database_name.text()
         if not database_name:
             self.statusBar().showMessage("Ошибка, не указано название файла!")
@@ -36,9 +68,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.database_connection = sqlite3.connect(database_name)
 
-        self.load_table_names() 
+        self.load_table_names()
         self.load_table()
-        self.statusBar().showMessage(f"База данных {database_name} успешно открыта!")
+        self.statusBar().showMessage(f"Пустая база данных успешно создана!")
+        self.tableupdate_count = 1
+
+    def save_database(self):
+        os.remove(self.database_name)
+        self.database_connection.close()
+        current_directory = os.path.dirname(os.path.abspath(__file__))
+
+        # Указываем начало имени файла
+        prefix = 'JOURNAL_'
+
+        # Проходим по файлам в директории
+        for filename in os.listdir(current_directory):
+            if filename.startswith(prefix):
+                old_path = os.path.join(current_directory, filename)
+                new_filename = self.database_name
+                new_path = os.path.join(current_directory, new_filename)
+                os.rename(old_path, new_path)
+                print(f'Файл переименован в {new_filename}')
+                break
 
     def load_table_names(self):
         cursor = self.database_connection.cursor()
@@ -68,3 +119,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for col_idx, value in enumerate(row):
                 self.tableWidget_database_content.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
 
+        if self.tableupdate_count == 1:
+            self.statusBar().showMessage(f"Таблица обновилась")
+            self.tableupdate_count += 1
+        else:
+            self.statusBar().showMessage(f"Таблица обновилась x{self.tableupdate_count}")
+            self.tableupdate_count += 1
