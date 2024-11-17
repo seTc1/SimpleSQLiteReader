@@ -91,6 +91,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 print(f'Файл переименован в {new_filename}')
                 break
 
+        self.unload_table()
+
     def load_table_names(self):
         cursor = self.database_connection.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -125,3 +127,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.statusBar().showMessage(f"Таблица обновилась x{self.tableupdate_count}")
             self.tableupdate_count += 1
+
+    def unload_table(self):
+        self.tableWidget_database_content.setRowCount(0)
+        self.tableWidget_database_content.setColumnCount(0)
+        self.combobox_chose_window.clear()
+        self.lineEdit_database_name.clear()
