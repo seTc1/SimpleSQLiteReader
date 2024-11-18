@@ -20,6 +20,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.journaldb_name = None
         self.tableupdate_count = 1
         self.database_name = None
+        self.saved_before_chancges = True
 
     def buttons_connection(self):
         self.btn_open_database.clicked.connect(self.open_database)
@@ -90,7 +91,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 new_filename = self.database_name
                 new_path = os.path.join(current_directory, new_filename)
                 os.rename(old_path, new_path)
-                print(f'Файл переименован в {new_filename}')
                 break
 
         self.unload_table()
@@ -137,10 +137,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lineEdit_database_name.clear()
 
     def closeEvent(self, event):
-        quit_msg = "Вы уверенны что хотите закрыть программу? Все несохранённые изменения удаляться!"
-        reply = QMessageBox.question(self, 'Message', quit_msg, QMessageBox.StandardButton.Yes,
-                                     QMessageBox.StandardButton.No)
-        if reply == QMessageBox.StandardButton.Yes:
-            event.accept()
-        else:
-            event.ignore()
+        if not self.saved_before_chancges:
+            quit_msg = "Внимание, все несохранённые данные будут утеряны!"
+            reply = QMessageBox.question(self, 'Вы уверенны что хотите закрыть программу?', quit_msg,
+                                         QMessageBox.StandardButton.Yes,
+                                         QMessageBox.StandardButton.No)
+            if reply == QMessageBox.StandardButton.Yes:
+                self.database_connection.close()
+                current_directory = os.path.dirname(os.path.abspath(__file__))
+                prefix = 'JOURNAL_'
+                for filename in os.listdir(current_directory):
+                    if filename.startswith(prefix):
+                        file_path = os.path.join(current_directory, filename)
+                        os.remove(file_path)
+                event.accept()
+            else:
+                event.ignore()
