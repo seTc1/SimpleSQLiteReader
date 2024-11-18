@@ -1,8 +1,8 @@
-from ExecutesSQLWindowUI import Ui_MainWindow
+from ExecutesSQLWindowUI import Ui_ExecuteSQL
 from PyQt6.QtWidgets import QMainWindow
 
 
-class ExecuteSQLWindow(QMainWindow, Ui_MainWindow):
+class ExecuteSQLWindow(QMainWindow, Ui_ExecuteSQL):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
