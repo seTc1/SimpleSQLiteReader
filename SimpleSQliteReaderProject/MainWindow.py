@@ -1,10 +1,12 @@
-from PyQt6.QtSql import QSqlDatabase, QSqlTableModel
+from PyQt6.QtWidgets import QMainWindow, QTableWidgetItem, QMessageBox
 import sqlite3
 import os
 import shutil
 from MainWindowUI import Ui_MainWindow
 from PyQt6.QtWidgets import QMainWindow, QTableWidgetItem
 from ExecuteSQLWindow import ExecuteSQLWindow
+
+from PyQt6.uic.properties import QtGui
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -133,3 +135,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tableWidget_database_content.setColumnCount(0)
         self.combobox_chose_window.clear()
         self.lineEdit_database_name.clear()
+
+    def closeEvent(self, event):
+        quit_msg = "Вы уверенны что хотите закрыть программу? Все несохранённые изменения удаляться!"
+        reply = QMessageBox.question(self, 'Message', quit_msg, QMessageBox.StandardButton.Yes,
+                                     QMessageBox.StandardButton.No)
+        if reply == QMessageBox.StandardButton.Yes:
+            event.accept()
+        else:
+            event.ignore()

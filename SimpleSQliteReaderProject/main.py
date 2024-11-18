@@ -1,5 +1,5 @@
 import sys
-import os
+
 from MainWindow import MainWindow
 from PyQt6.QtWidgets import QApplication
 
@@ -13,7 +13,6 @@ if __name__ == '__main__':
 
     windowClass = MainWindow()
     windowClass.show()
-
 
     sys.excepthook = except_hook
 

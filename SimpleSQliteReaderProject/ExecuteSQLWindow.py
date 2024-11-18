@@ -1,6 +1,6 @@
-
 from ExecutesSQLWindowUI import Ui_MainWindow
 from PyQt6.QtWidgets import QMainWindow
+
 
 class ExecuteSQLWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -10,4 +10,3 @@ class ExecuteSQLWindow(QMainWindow, Ui_MainWindow):
 
     def execute_query(self):
         pass
-
