@@ -5,6 +5,11 @@ import shutil
 from MainWindowUI import Ui_MainWindow
 from PyQt6.QtWidgets import QMainWindow, QTableWidgetItem
 from ExecuteSQLWindow import ExecuteSQLWindow
+from PyQt6.QtCore import pyqtSignal, QObject
+
+
+class Comunicator(QObject):
+    database_logs = pyqtSignal(object)
 
 
 # Класс главного окна приложения
@@ -13,12 +18,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)  # Инициализация интерфейса из UI-файла
         self.buttons_connection()  # Подключение других кнопок
-        self.executeSQlWindow = ExecuteSQLWindow()  # Создание экземпляра окна выполнения SQL
+
         self.database_connection = None  # Текущая активная база данных
         self.journaldb_name = None  # Журнал изменений для базы данных
-        self.tableupdate_count = 1  # Счётчик обновлений таблицы
         self.database_name = None  # Имя текущей базы данных
-        self.saved_before_changes = True  # Флаг сохранения данных перед изменениями
+        self.saved_before_changes = False  # Флаг сохранения данных перед изменениями
+        self.tableupdate_count = 1  # Счётчик обновлений таблицы
+
+        self.comunticator = Comunicator()
+
+        self.executeSQlWindow = ExecuteSQLWindow()  # Создание экземпляра окна выполнения SQL
+        self.comunticator.database_logs.connect(self.executeSQlWindow.get_execution_data)
+        self.executeSQlWindow.comunicator.query.connect(self.execute_query)
 
     # Метод для подключения сигналов к кнопкам
     def buttons_connection(self):
@@ -33,21 +44,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def open_sqlexecute_window(self):
         self.executeSQlWindow.show()
 
+    def execute_query(self, query):
+        self.send_query_logs()
+
+    def send_query_logs(self):
+        self.comunticator.database_logs.emit("tipo logi")
+
     # Метод для открытия существующей базы данных
     def open_database(self):
-        self.unloadTable()
+        if not self.saved_before_changes:  # Проверка, сохранены ли данные
+            quit_msg = "Внимание, все несохранённые данные будут утеряны!"
+            reply = QMessageBox.question(self, f'Вы уверенны что хотите открыть новую таблицу?',
+                                         quit_msg,
+                                         QMessageBox.StandardButton.Yes,
+                                         QMessageBox.StandardButton.No)
+            if reply == QMessageBox.StandardButton.No:
+                return
 
-        self.database_name = self.lineEdit_database_name.text()  # Получение имени базы данных из текстового поля
-        if not self.database_name:  # Проверка, указано ли имя базы данных
+        if self.database_name == self.lineEdit_database_name.text():  # Проверка, совпадает ли имя открываемой базы данных с текущей
+            self.statusBar().showMessage("Ошибка, база данных уже открыта!")
+            return
+        if not self.lineEdit_database_name.text():  # Проверка, указано ли имя базы данных
             self.statusBar().showMessage("Ошибка, не указано название файла!")
             return
-        elif not self.database_name.endswith((".db", ".sqlite3", ".sqlite", ".db3")):  # Проверка расширения файла
+        elif not self.lineEdit_database_name.text().endswith(
+                (".db", ".sqlite3", ".sqlite", ".db3")):  # Проверка расширения файла
             self.statusBar().showMessage("Ошибка, неверное расширение файла!")
             return
 
-        if not os.path.exists(self.database_name):  # Проверка, существует ли файл базы данных
+        if not os.path.exists(self.lineEdit_database_name.text()):  # Проверка, существует ли файл базы данных
             self.statusBar().showMessage("Ошибка, файл базы данных не существует!")
             return
+
+        self.unloadTable()
+        self.database_name = self.lineEdit_database_name.text()  # Получение имени базы данных из текстового поля
 
         self.create_and_connect_journal()
 
@@ -55,7 +85,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     # Метод для создания новой базы данных
     def create_database(self):
-
+        if not self.saved_before_changes:  # Проверка, сохранены ли данные
+            quit_msg = "Внимание, все несохранённые данные будут утеряны!"
+            reply = QMessageBox.question(self, f'Вы уверенны что хотите создать новую таблицу?',
+                                         quit_msg,
+                                         QMessageBox.StandardButton.Yes,
+                                         QMessageBox.StandardButton.No)
+            if reply == QMessageBox.StandardButton.No:
+                return
 
         self.database_name = self.lineEdit_database_name.text()
         if not self.database_name:
@@ -69,9 +106,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.statusBar().showMessage("Ошибка, файл с таким названием уже существует!")
             return
 
+        self.deleteUnsavedTable()
         self.database_connection = sqlite3.connect(self.database_name)  # Создание новой базы данных
         self.create_and_connect_journal()
-        open()
+        self.open_database()
         self.statusBar().showMessage(f"Пустая база данных успешно создана!")
 
     def create_and_connect_journal(self):
@@ -99,7 +137,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 os.rename(old_path, new_path)
                 break
 
+        self.saved_before_changes = True
         self.update_table()
+        self.statusBar().showMessage(f"Таблица сохранилась и обновилась")
 
     # Метод для загрузки списка таблиц из базы данных
     def load_table_names(self):
@@ -159,7 +199,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tableWidget_database_content.setRowCount(0)
         self.tableWidget_database_content.setColumnCount(0)
         self.combobox_chose_window.clear()
-        self.saved_before_changes = True
+        self.saved_before_changes = False
         self.tableupdate_count = 1
 
         self.create_and_connect_journal()
@@ -178,7 +218,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.database_connection = None  # Текущая активная база данных
         self.journaldb_name = None  # Журнал изменений для базы данных
         self.database_name = None  # Имя текущей базы данных
-        self.saved_before_changes = True  # Флаг сохранения данных перед изменениями
+        self.saved_before_changes = False  # Флаг сохранения данных перед изменениями
         self.tableupdate_count = 1  # Счётчик обновлений таблицы
 
     # Метод для обработки закрытия окна
