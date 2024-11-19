@@ -84,11 +84,11 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "SQLite Database Manager"))
-        self.btn_create_database.setText(_translate("MainWindow", "Создать БД"))
-        self.btn_open_database.setText(_translate("MainWindow", "Открыть БД"))
-        self.btn_save_bd.setText(_translate("MainWindow", "Сохранить БД"))
+        self.btn_create_database.setText(_translate("MainWindow", "🗃️ Создать БД"))
+        self.btn_open_database.setText(_translate("MainWindow", "🔍 Открыть БД"))
+        self.btn_save_bd.setText(_translate("MainWindow", "📝 Сохранить БД"))
         self.lineEdit_database_name.setPlaceholderText(_translate("MainWindow", "Введите название базы данных"))
         self.lable_tabletext.setText(_translate("MainWindow", "Таблица:"))
-        self.btn_update_table.setText(_translate("MainWindow", "Обновить таблицу"))
-        self.btn_execute_sql.setText(_translate("MainWindow", "Выполнить SQL"))
+        self.btn_update_table.setText(_translate("MainWindow", "🔁 Обновить таблицу"))
+        self.btn_execute_sql.setText(_translate("MainWindow", "⌨️ Выполнить SQL"))
         self.action.setText(_translate("MainWindow", "Создать базу данных"))

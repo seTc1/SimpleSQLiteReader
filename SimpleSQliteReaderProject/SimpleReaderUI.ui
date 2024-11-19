@@ -31,21 +31,21 @@
          <item>
           <widget class="QPushButton" name="btn_create_database">
            <property name="text">
-            <string>Создать БД</string>
+            <string>🗃️ Создать БД</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="btn_open_database">
            <property name="text">
-            <string>Открыть БД</string>
+            <string>🔍 Открыть БД</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="btn_save_bd">
            <property name="text">
-            <string>Сохранить БД</string>
+            <string>📝 Сохранить БД</string>
            </property>
           </widget>
          </item>
@@ -110,14 +110,14 @@
            <item>
             <widget class="QPushButton" name="btn_update_table">
              <property name="text">
-              <string>Обновить таблицу</string>
+              <string>🔁 Обновить таблицу</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QPushButton" name="btn_execute_sql">
              <property name="text">
-              <string>Выполнить SQL</string>
+              <string>⌨️ Выполнить SQL</string>
              </property>
             </widget>
            </item>
