@@ -10,6 +10,7 @@ from PyQt6.QtCore import pyqtSignal, QObject
 
 class Comunicator(QObject):
     database_logs = pyqtSignal(object)
+    table_and_logs = pyqtSignal(object, object, object)
 
 
 # Класс главного окна приложения
@@ -56,12 +57,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cursor.execute(query)
             self.database_connection.commit()
             result = cursor.fetchall()
-            log_message = f"✅ Команда успешно выполнена. Результат: {result}\n"
+            columns = [description[0] for description in cursor.description]
+            log_message = f"✅ Команда успешно выполнена. Затронуто данных: {len(result)}\n"
         except sqlite3.Error as e:
             log_message = f"❌ Ошибка при выполнении команды: {e}\n"
         self.send_query_logs(log_message)
 
-    def send_query_logs(self, logs_data):
+    def send_query_logs(self, logs_data, result_bd):
         if not self.database_connection:
             self.statusBar().showMessage(f"❌ Ошибка, нет базы данных")
             return
