@@ -23,13 +23,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.database_connection = None  # Текущая активная база данных
         self.journaldb_name = None  # Журнал изменений для базы данных
         self.database_name = None  # Имя текущей базы данных
-        self.saved_before_changes = False  # Флаг сохранения данных перед изменениями
+        self.saved_before_changes = True  # Флаг сохранения данных перед изменениями
         self.tableupdate_count = 1  # Счётчик обновлений таблицы
 
         self.comunticator = Comunicator()
 
         self.executeSQlWindow = ExecuteSQLWindow()  # Создание экземпляра окна выполнения SQL
+
         self.comunticator.database_logs.connect(self.executeSQlWindow.get_execution_data)
+        self.comunticator.table_and_logs.connect(self.executeSQlWindow.load_data)
+
         self.executeSQlWindow.comunicator.query.connect(self.execute_query)
 
     # Метод для подключения сигналов к кнопкам
@@ -54,14 +57,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         try:
             cursor = self.database_connection.cursor()
-            cursor.execute(query)
-            self.database_connection.commit()
-            result = cursor.fetchall()
-            columns = [description[0] for description in cursor.description]
-            log_message = f"✅ Команда успешно выполнена. Затронуто данных: {len(result)}\n"
+            if query.strip().lower().startswith("select"):
+                result = cursor.execute(query).fetchall()
+                columns = [description[0] for description in cursor.description]
+                log_message = f"✅ Команда успешно выполнена. Затронуто данных: {len(result)}\n"
+                self.comunticator.table_and_logs.emit(log_message, result, columns)
+                self.saved_before_changes = False
+                self.load_table_names()  # Загрузка списка таблиц
+                self.load_table()  # Загрузка содержимого таблицы
+            else:
+                # Выполнение запросов изменения в основной базе данных
+
+                cursor.execute(query)
+                self.database_connection.commit()
+                log_message = f"✅ Команда успешно выполнена.\n"
+                self.comunticator.database_logs.emit(log_message)
+                self.saved_before_changes = False
+                self.load_table_names()  # Загрузка списка таблиц
+                self.load_table()  # Загрузка содержимого таблицы
         except sqlite3.Error as e:
             log_message = f"❌ Ошибка при выполнении команды: {e}\n"
-        self.send_query_logs(log_message)
+            self.comunticator.database_logs.emit(log_message)
 
     def send_query_logs(self, logs_data, result_bd):
         if not self.database_connection:
@@ -231,3 +247,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if filename.startswith(prefix):
                 file_path = os.path.join(current_directory, filename)
                 os.remove(file_path)
+
+    def closeEvent(self, event):
+        print("closeEvent")
+        if not self.saved_before_changes:  # Проверка, сохранены ли данные
+            quit_msg = "Внимание, все несохранённые данные будут утеряны!"
+            reply = QMessageBox.question(self, 'Вы уверенны что хотите закрыть программу?', quit_msg,
+                                         QMessageBox.StandardButton.Yes,
+                                         QMessageBox.StandardButton.No)
+            if reply == QMessageBox.StandardButton.Yes:
+                event.accept()
+            else:
+                event.ignore()
+        self.combobox_chose_window.clear()  # Очистка списка таблиц
+        self.tableWidget_database_content.setRowCount(0)  # Очистка строк
+        self.tableWidget_database_content.setColumnCount(0)  # Очистка столбцов
+        if self.database_connection:
+            self.database_connection.close()
+        self.database_connection = None  # Текущая активная база данных
+        self.journaldb_name = None  # Журнал изменений для базы данных
+        self.database_name = None  # Имя текущей базы данных
+        self.saved_before_changes = False  # Флаг сохранения данных перед изменениями
+
+        self.executeSQlWindow.close()
+        self.unloadTable()
+        self.deleteUnsavedTable()

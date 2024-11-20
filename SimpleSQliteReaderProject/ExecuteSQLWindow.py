@@ -19,13 +19,19 @@ class ExecuteSQLWindow(QMainWindow, Ui_ExecuteSQL):
 
     def get_execution_data(self, data_log):
         print(data_log)
+        self.logs_data_output_text.clear()
+        self.view_command_widget.setRowCount(0)  # Очистка строк
+        self.view_command_widget.setColumnCount(0)  # Очистка столбцов
         self.logs_data_output_text.insertPlainText(data_log)
 
-    def load_data(self, data, columns):
-        self.table_widget.setRowCount(len(data))
-        self.table_widget.setColumnCount(len(columns))
-        self.table_widget.setHorizontalHeaderLabels(columns)
+    def load_data(self, data_log, data, columns):
+        print(data_log)
+        self.logs_data_output_text.insertPlainText(data_log)
+
+        self.view_command_widget.setRowCount(len(data))
+        self.view_command_widget.setColumnCount(len(columns))
+        self.view_command_widget.setHorizontalHeaderLabels(columns)
 
         for row_idx, row in enumerate(data):
             for col_idx, value in enumerate(row):
-                self.table_widget.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
+                self.view_command_widget.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
