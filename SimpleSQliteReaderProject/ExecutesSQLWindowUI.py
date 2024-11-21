@@ -70,4 +70,4 @@ class Ui_ExecuteSQL(object):
         _translate = QtCore.QCoreApplication.translate
         ExecuteSQL.setWindowTitle(_translate("ExecuteSQL", "Выполнить SQL"))
         self.textEdit_sql_query.setPlaceholderText(_translate("ExecuteSQL", "Введите SQL команду здесь"))
-        self.btn_execute_query.setText(_translate("ExecuteSQL", "Выполнить команду"))
+        self.btn_execute_query.setText(_translate("ExecuteSQL", "⌨️ Выполнить команду"))
