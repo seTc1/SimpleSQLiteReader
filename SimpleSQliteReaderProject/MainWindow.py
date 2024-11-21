@@ -180,18 +180,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # Поиск и переименование резервной копии
             prefix = 'JOURNAL_'
-            journal_path = None
             for filename in os.listdir(current_directory):
                 if filename.startswith(prefix):
-                    journal_path = os.path.join(current_directory, filename)
+                    old_path = os.path.join(current_directory, filename)
+                    new_filename = self.database_name
+                    new_path = os.path.join(current_directory, new_filename)
+                    os.rename(old_path, new_path)
                     break
-
-            if journal_path is None:
-                self.statusBar().showMessage("❌ Ошибка, резервная копия не найдена!")
-                return
-
-            new_path = os.path.join(current_directory, self.database_name)
-            os.rename(journal_path, new_path)  # Переименование файла-журнала
 
             self.saved_before_changes = True
             self.update_table()
